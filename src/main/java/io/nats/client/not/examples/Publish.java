@@ -71,7 +71,7 @@ public class Publish {
         try {
 
             // Initialize our tracer
-            io.opentracing.Tracer tracer = Not.initTracing("NATS OpenTracing Publisher");
+            Tracer tracer = Not.initTracing("NATS OpenTracing Publisher");
 
             // Connect to the NATS server
             System.out.printf("\n\nSending %s on %s, server is %s\n\n", message, subject, server);
