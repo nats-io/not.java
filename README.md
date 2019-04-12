@@ -113,8 +113,8 @@ BUILD SUCCESSFUL in 1s
 
 ## Request/Reply Examples
 
-* [Requestor Example](./examples/Requestor.java)
-* [Replier Example](./examples/Replier.java)
+* [Request Example](./src/main/java/io/nats/client/not/examples/Request.java)
+* [Reply Example](./src/main/java/io/nats/client/not/examples/Reply.java)
 
 Open two terminals, in one terminal use the example helper script
 and run:
@@ -159,8 +159,8 @@ You can see the entire span of the request and the associated replier span.
 
 ## Publish/Subscribe Examples
 
-* [Publisher Example](./examples/Publish.java)
-* [Subscriber Example](./examples/Subscribe.java)
+* [Publisher Example](./src/main/java/io/nats/client/not/examples/Publish.java)
+* [Subscriber Example](./src/main/java/io/nats/client/not/examples/Subscribe.java)
 
 Open three terminals, in the first two terminals go to the subscribe example
 directory and run:
