@@ -20,11 +20,8 @@ import io.nats.client.impl.NatsMessageCheater;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
 
 import static org.junit.Assert.*;
-
-import java.nio.ByteBuffer;
 
 public class NotTest {
     @Test
@@ -41,18 +38,18 @@ public class NotTest {
         span.setBaggageItem("k1", "v1");
         SpanContext sendContext = span.context();
 
-        ByteBuffer carrier = ByteBuffer.allocate(128);
-        sendTracer.inject(sendContext, Format.Builtin.BINARY, carrier);
         String origData = new String("hello");
 
         // encode, here we would send the data over the wire, and it'd be received
         // as a nats message on the other side.
-        byte[] wireData = Not.createTracePayload(carrier, origData.getBytes());
+        byte[] wireData = Not.encode(sendTracer, sendContext, origData.getBytes());
+
+        // This represents a received message with the encoded payload.
         Message m = NatsMessageCheater.createMessage("foo", "bar", wireData);
 
         // Receive side...
         Tracer recvTracer = Not.initTracing("receive");
-        TraceMessage tm = Not.createTraceMessage(recvTracer, m);
+        TraceMessage tm = Not.decode(recvTracer, m);
         assertTrue(new String(tm.getData()).equals(origData));
         assertTrue(tm.getSubject().equals("foo"));
         assertTrue(tm.getReplyTo().equals("bar"));
@@ -71,7 +68,7 @@ public class NotTest {
 
         // Receive side...
         Tracer recvTracer = Not.initTracing("receive");
-        TraceMessage tm = Not.createTraceMessage(recvTracer, m);
+        TraceMessage tm = Not.decode(recvTracer, m);
         assertTrue(new String(tm.getData()).equals("hello"));
         assertTrue(tm.getSubject().equals("foo"));
         assertTrue(tm.getReplyTo().equals("bar"));

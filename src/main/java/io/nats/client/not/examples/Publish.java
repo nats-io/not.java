@@ -20,9 +20,7 @@ import io.nats.client.not.Not;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
@@ -31,24 +29,7 @@ public class Publish {
     static final String usageString =
             "\nUsage: java NatsPub [server] <subject> <text message>\n"
                     + "\nUse tls:// or opentls:// to require tls, via the Default SSLContext\n"
-                    + "\nSet the environment variable NATS_NKEY to use challenge response authentication by setting a file containing your private key.\n"
-                    + "\nSet the environment variable NATS_CREDS to use JWT/NKey authentication by setting a file containing your user creds.\n"
                     + "\nUse the URL for user/pass/token authentication.\n";
-
-    public static void traceResult(byte[] message) {
-        io.opentracing.Tracer tracer = Not.initTracing("NATS Sample Publisher Test Subscriber");
-        Tracer.SpanBuilder spanBuilder = tracer.buildSpan("Receive");
-
-        java.nio.ByteBuffer byteBuffer = ByteBuffer.allocate(128);
-        try {
-            SpanContext spanContext = tracer.extract(Format.Builtin.BINARY, byteBuffer);
-            if (spanContext != null) {
-                spanBuilder.asChildOf(spanContext);
-            }
-        } catch (Exception e) {
-            spanBuilder.withTag("Error", "Extract from request exception: " + e.getMessage());
-        }
-    }
 
     public static void main(String args[]) {
         String subject;
@@ -81,12 +62,10 @@ public class Publish {
             Span span = tracer.buildSpan("Publish").withTag("type", "publisher").start();
             SpanContext spanContext = span.context();
 
-            // Create a carrier to inject the span information.
-            ByteBuffer carrier = ByteBuffer.allocate(128);
-            tracer.inject(spanContext, Format.Builtin.BINARY, carrier);
+            // Publish the message, encoding it using the tracer and spanContext.
+            nc.publish(subject, Not.encode(tracer, spanContext,
+                message.getBytes(StandardCharsets.UTF_8)));
 
-            // Publish the message, createTracePayload passing in the carrier.
-            nc.publish(subject, Not.createTracePayload(carrier, message.getBytes(StandardCharsets.UTF_8)));
             span.log("Published message.");
             span.finish();
 

@@ -13,6 +13,7 @@
 
 package io.nats.client.not.examples;
 
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
@@ -39,6 +40,9 @@ public class Reply {
         String server;
 
         if (args.length == 2) {
+            server = args[0];
+            subject = args[1];
+        } else if (args.length == 1) {
             server = Options.DEFAULT_URL;
             subject = args[0];
         } else {
@@ -57,7 +61,7 @@ public class Reply {
             Dispatcher d = nc.createDispatcher((msg) -> {
 
                 // Create the trace message from the received NATS message
-                TraceMessage tm = Not.createTraceMessage(tracer, msg);
+                TraceMessage tm = Not.decode(tracer, msg);
 
                 String logMsg = String.format("Received message \"%s\" on subject \"%s\", replying to %s\n", 
                                         new String(tm.getData(), StandardCharsets.UTF_8), 
@@ -71,7 +75,7 @@ public class Reply {
                     recvSpan.log(logMsg);
 
                     // respond inside the span to get accurate timing.
-                    nc.publish(tm.getReplyTo(), tm.getData());
+                    nc.publish(tm.getReplyTo(), "Here's some help".getBytes(StandardCharsets.UTF_8));
                     
                     recvSpan.finish();
                 } else {

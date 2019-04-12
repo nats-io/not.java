@@ -59,7 +59,7 @@ public class Subscribe {
             // Receive the message from the publisher, and create a 
             // trace message from the raw NATS message.
             Message msg = sub.nextMessage(Duration.ofHours(1));
-            TraceMessage tm = Not.createTraceMessage(tracer, msg);
+            TraceMessage tm = Not.decode(tracer, msg);
 
             String logMsg = String.format("Received message \"%s\" on subject \"%s\"\n", 
                 new String(tm.getData(), StandardCharsets.UTF_8), 

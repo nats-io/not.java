@@ -27,37 +27,44 @@ public class TraceMessage implements io.nats.client.Message {
     private SpanContext spanContext;
 
     /**
-     * Creates a trace message.  Use Not.createTraceMessage instead.
-     * @param msg
+     * Creates a trace message from a NATS message payload an tracer.
+     * 
+     * @param tracer
+     * @param rawPayload
      */
-    TraceMessage(Tracer tracer, Message msg) {
-        if (msg == null) {
-            throw new IllegalArgumentException("Message cannot be null");
-        }
-
-        // Use a byte buffer to deserialize the encoded message.
-        // The received message byte array has |carrier|payload|
-        byte[] raw = msg.getData();
-        ByteBuffer buf = ByteBuffer.allocate(raw.length);
-        buf.put(raw);
-        buf.rewind();
-
-        // extract the carrier
-        spanContext = tracer.extract(Format.Builtin.BINARY, buf);
-
-        // get the payload
-        int payloadLen = buf.remaining();
-        if (payloadLen > 0) {
-            payload = new byte[payloadLen];
-            buf.get(payload);
-        } else {
+    TraceMessage(Tracer tracer, byte[] rawPayload) {
+        if (rawPayload == null) {
+            spanContext = null;
             payload = null;
         }
 
-        // Assign the message;
+        // Use a carrier to deserialize the encoded message.
+        // The received message byte array has |carrier|payload|
+        NatsCarrier c = new NatsCarrier(rawPayload);
+        spanContext = tracer.extract(Format.Builtin.BINARY, c);
+        if (spanContext != null) {
+            payload = c.getRemaining();
+        } else {
+            // it's a non-trace message
+            payload = rawPayload;
+        }
+    }
+
+    /**
+     * Creates a trace message.  Use Not.decode instead.
+     * @param tracer The OpenTracing tracer
+     * @param msg a NATS message payload
+     */
+    TraceMessage(Tracer tracer, Message msg) {
+        this(tracer, msg.getData());
         message = msg;
     }
 
+    /**
+     * Gets the span context of a trace message.
+     * @return a span context, null if message did not contain trace
+     * inforamtion.
+     */
     public SpanContext getSpanContext() {
         return spanContext;
     }

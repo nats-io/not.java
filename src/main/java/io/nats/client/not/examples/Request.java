@@ -25,10 +25,7 @@ import io.nats.client.not.Not;
 
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
-import io.opentracing.propagation.Format;
 import io.opentracing.Tracer;
-
-import java.nio.ByteBuffer;
 
 public class Request {
 
@@ -66,13 +63,11 @@ public class Request {
             Span span = tracer.buildSpan("Request").withTag("type", "requestor").start();
             SpanContext spanContext = span.context();
 
-            // Create a carrier to inject the span information.
-            ByteBuffer carrier = ByteBuffer.allocate(128);
-            tracer.inject(spanContext, Format.Builtin.BINARY, carrier);
-
+            // Publish the message using the tracer and spanContext to 
+            // encode it.
             Future<Message> replyFuture = nc.request(subject, 
-                   Not.createTracePayload(carrier, 
-                   message.getBytes(StandardCharsets.UTF_8)));
+                Not.encode(tracer, spanContext,
+                message.getBytes(StandardCharsets.UTF_8)));
             Message reply = replyFuture.get(5, TimeUnit.SECONDS);
 
             System.out.println();
