@@ -13,8 +13,6 @@
 
 package io.nats.client.not;
 
-import java.nio.ByteBuffer;
-
 import io.nats.client.Message;
 import io.nats.client.Subscription;
 import io.opentracing.SpanContext;
@@ -40,12 +38,12 @@ public class TraceMessage implements io.nats.client.Message {
 
         // Use a carrier to deserialize the encoded message.
         // The received message byte array has |carrier|payload|
-        NatsCarrier c = new NatsCarrier(rawPayload);
+        Not.Carrier c = new Not.Carrier(rawPayload);
         spanContext = tracer.extract(Format.Builtin.BINARY, c);
         if (spanContext != null) {
             payload = c.getRemaining();
         } else {
-            // it's a non-trace message
+            // There's no trace data in this message
             payload = rawPayload;
         }
     }

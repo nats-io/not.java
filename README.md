@@ -32,54 +32,75 @@ or event and log information, which is reported to the OpenTracing aggregator
 for reporting and display.
 
 To propogate, span contexts are serialized into a NATS message using the
-binary format. We provide a `not` class which will do what is needed to
+binary format. We provide a `Not` class which will do what is needed to
 [inject](https://opentracing.io/docs/overview/inject-extract/) span contexts
 into messages and to extract them on the other side.
 
-Here's how to send a span context over NATS in java.
+Using the API is relatively simple, and the same steps are taken in
+sending or receiving data regardless of which message pattern is used.
+
+### Sending a message
+
+After establishing an opentracing tracer, span, and span context, simply
+pass the payload into the static `Not.encode` function. `Not.encode` will
+encode the payload to be a payload traceable by by the Jaeger Open Tracing
+system.
 
 ```java
-// Initialize our tracer
-Tracer tracer = Not.initTracing("NATS OpenTracing Publisher");
+    Tracer tracer = Not.initTracing("Your sending service");
+    Connection nc = Nats.connect("demo.nats.io");
 
-// Create a span context and inject our tracing information.
-Span span = tracer.buildSpan("Publish").withTag("type", "publisher").start();
-SpanContext spanContext = span.context();
+    Span span = tracer.buildSpan("Send Data").withTag("type", "sender").start();
+    SpanContext spanContext = span.context();
 
-// Publish the message, encoding it using the tracer and spanContext.
-nc.publish(subject, Not.encode(tracer, spanContext,
-    message.getBytes(StandardCharsets.UTF_8)));
+    // Encode the message with trace data before sending
+    nc.publish(subject, Not.encode(tracer, spanContext,
+        message.getBytes(StandardCharsets.UTF_8)));
+
+    span.finish();
 ```
 
-Retrieving a span from an inbound message and associating with a new response
-span is straightforward as well.
+### Receiving a message
+
+When receiving a message, generate a `TraceMessage` from `Not.decode`.  You can
+use this as a regular NATS message, except there is another API to get the 
+span context.  If `TraceMessage.getSpanContext()` is null, the message has no
+trace information and should be handled normally.
 
 ```java
-// create a TraceMessage from the tracer and a raw NATS message.  A trace
-// message has the same interface as a standard NATS message, except with
-// it has an additional getSpanContext() API.
-TraceMessage tm = Not.decode(tracer, msg);
+    Tracer tracer = Not.initTracing("Your receiving service");
 
-// Extract the SpanContext from the trace message.  It will be null
-// if this message does not have trace information encoded in it.
-SpanContext sc = tm.getSpanContext();
-if (sc != null) {
-    Span recvSpan = tracer.buildSpan("Process message").asChildOf(sc).withTag("type", "subscriber").start();
+    Connection nc = Nats.connect("demo.nats.io");
 
-    // Note that the interface is the same as a standard NATS message,
-    // except the addition of the getSpanContext() API used above.
-    recvSpan.log("Received message \"%s\" on subject \"%s\"\n",
-        new String(tm.getData(), StandardCharsets.UTF_8),
-        tm.getSubject());
+    Dispatcher d = nc.createDispatcher((msg) -> {
 
-    recvSpan.finish();
-}
+        // Decode the raw payload into a trace message.
+        TraceMessage tm = Not.decode(tracer, msg);
 
+        // If there is a span context, the message has trace information.
+        SpanContext sc = tm.getSpanContext();
+        if (sc != null) {
+            Span recvSpan = tracer.buildSpan("Process data")
+                .asChildOf(sc).withTag("type", "receiver").start();
+
+            doSomething(tm.getData());
+
+            recvSpan.finish();
+        } else {
+            // This was not a trace message, so process normally.  Note that
+            // you can still use the trace message object here simplifying
+            // your code.
+            doSomething(tm.getData());
+        }
+    });
+
+    // subscribe to receive messages and and other application code.
+    // ...
 ```
 
 Check out the [examples](./examples) for additional usage.
 
-## Setting up an OpenTracing Tracer
+## Setting up the Jaeger Tracer
 
 To run the the examples, we setup [Jaeger](https://www.jaegertracing.io/)
 as the OpenTracing tracer with its convenient "all-in-one" docker image.
@@ -103,13 +124,18 @@ documentation for more information.
 
 ## Building
 
-To build, run `gradle build uberjar`:
+To build, run `gradle build fatJar`:
 
 ```bash
-$ gradle build uberjar
-BUILD SUCCESSFUL in 1s
-5 actionable tasks: 2 executed, 3 up-to-date
+$ gradle build fatJar
+BUILD SUCCESSFUL in 2s
+5 actionable tasks: 5 executed
 ```
+
+## Examples
+
+These examples use `demo.nats.io` as the server name.  If you choose to
+run a NATS [server](http://github.com/nats-io/gnatsd) locally, use `localhost`.
 
 ## Request/Reply Examples
 
@@ -120,13 +146,13 @@ Open two terminals, in one terminal use the example helper script
 and run:
 
 ```bash
-./scripts/run_example.sh Reply foo "here's some help"
+./scripts/run_example.sh Reply demo.nats.io foo
 ```
 
 In the other terminal, run:
 
 ```bash
-./scripts/run_example.sh Request foo help
+./scripts/run_example.sh Request demo.nats.io foo help
 ```
 
 ### Request Output
@@ -166,19 +192,19 @@ Open three terminals, in the first two terminals go to the subscribe example
 directory and run:
 
 ```bash
-./scripts/run_example.sh Subscribe foo
+./scripts/run_example.sh Subscribe demo.nats.io foo
 ```
 
 and in the second terminal:
 
 ```bash
-./scripts/run_example.sh Subscribe foo
+./scripts/run_example.sh Subscribe demo.nats.io foo
 ```
 
 And finally in the third terminal go to the publish example directory:
 
 ```bash
-./scripts/run_example.sh Publish foo hello
+./scripts/run_example.sh Publish demo.nats.io foo hello
 ```
 
 Navigate with a browser to http://localhost:16686.  Find the _NATS Publisher_
@@ -197,7 +223,7 @@ messages and passing them to application code where the subscriber span is repor
 ```text
 [main] INFO io.jaegertracing.Configuration - Initialized tracer=JaegerTracer(version=Java-0.34.1-SNAPSHOT, serviceName=NATS OpenTracing Subscriber, reporter=CompositeReporter(reporters=[RemoteReporter(sender=UdpSender(), closeEnqueueTimeout=1000), LoggingReporter(logger=org.slf4j.impl.SimpleLogger(io.jaegertracing.internal.reporters.LoggingReporter))]), sampler=ConstSampler(decision=true, tags={sampler.type=const, sampler.param=true}), tags={hostname=MacBook-Pro-2.local, jaeger.version=Java-0.34.1-SNAPSHOT, ip=192.168.0.6}, zipkinSharedRpcSpan=false, expandExceptionLogs=false, useTraceId128Bit=false)
 
-Trying to connect to nats://localhost:4222, and listen to foo.
+Connected to demo.nats.io, subscribed to foo.
 
 [main] INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: 2d16a66cb0ea9a3:d9739bb64e5af66a:2d16a66cb0ea9a3:1 - Process message
 Received message "hello" on subject "foo"

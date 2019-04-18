@@ -50,7 +50,6 @@ public class Publish {
         }
 
         try {
-
             // Initialize our tracer
             Tracer tracer = Not.initTracing("NATS OpenTracing Publisher");
 

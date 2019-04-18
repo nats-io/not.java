@@ -48,11 +48,11 @@ dependencies {
     compile 'org.slf4j:slf4j-simple:1.7.26'
 }
 
-task uberjar(type: Jar) {
+task fatJar(type: Jar) {
     manifest {
         attributes 'Main-Class': 'io.nats.client.not.Publish'
     }
-    baseName = 'uber-not'
+    baseName = 'not-fat'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }

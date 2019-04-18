@@ -68,7 +68,7 @@ public class Request {
             Future<Message> replyFuture = nc.request(subject, 
                 Not.encode(tracer, spanContext,
                 message.getBytes(StandardCharsets.UTF_8)));
-            Message reply = replyFuture.get(5, TimeUnit.SECONDS);
+            Message reply = replyFuture.get(5, TimeUnit.MINUTES);
 
             System.out.println();
             String logMsg = String.format(

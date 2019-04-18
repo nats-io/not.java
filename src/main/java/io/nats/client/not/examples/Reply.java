@@ -13,7 +13,6 @@
 
 package io.nats.client.not.examples;
 
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;

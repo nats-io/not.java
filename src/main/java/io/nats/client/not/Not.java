@@ -20,12 +20,78 @@ import io.jaegertracing.Configuration.ReporterConfiguration;
 import io.jaegertracing.Configuration.SamplerConfiguration;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
+import io.opentracing.propagation.Binary;
 import io.opentracing.propagation.Format;
 
 /**
  * This class provides the java NATS open tracing implemention.
  */
 public class Not {
+
+    /**
+     * The inner Carrier class is a internal opentracing carrier for tracing
+     * NATS messages.
+     *
+     * A carrier is a high level abstraction over the data packaged into
+     * requests that propagate span contects between distributed applications. 
+     * A carrier allows the open tracing implemention to serialize and
+     * deserialized data into a user specific implementation.  In this case, 
+     * the carrier is a fairly simple wrapper around a ByteBuffer.
+     *
+     * More on Open Tracing carriers can be found here:
+     * https://opentracing.io/guides/java/inject-extract/
+     */
+    static class Carrier implements Binary {
+   
+        ByteBuffer buffer = null;
+
+        /**
+         * Creates a NatsCarrier for extraction
+         * 
+         * @param size - initial buffer size, used for extraction.
+         */
+        public Carrier(byte[] rawCarrierData) {
+            buffer = ByteBuffer.wrap(rawCarrierData);
+        }
+
+        /**
+         * Helper function to get the remaining bytes from the buffer.
+         */
+        public byte[] getRemaining() {
+            if (buffer == null) {
+                return null;
+            }
+            
+            int payloadLen = buffer.remaining();
+            if (payloadLen == 0) {
+                return null;
+            }
+        
+            byte[] payload = new byte[payloadLen];
+            buffer.get(payload);
+            return payload;
+        }
+
+        /** 
+         * Creates a NatsCarrier with an uninitalized buffer for injection
+         */
+        public Carrier() {}
+        
+        @Override
+        public ByteBuffer injectionBuffer(int length) {
+            if (length <= 0) {
+                throw new IllegalArgumentException("length must be greater than zero");
+            }
+
+            buffer = ByteBuffer.allocate(length);        
+            return buffer;
+        }
+        
+        @Override
+        public ByteBuffer extractionBuffer() {
+            return buffer;
+        }  
+    }
 
     /**
      * encode generates a byte array with tracing information and
@@ -45,7 +111,7 @@ public class Not {
             throw new IllegalArgumentException("spanContext cannot be null");
         }
 
-        NatsCarrier c = new NatsCarrier();
+        Not.Carrier c = new Not.Carrier();
         tracer.inject(spanContext, Format.Builtin.BINARY, c);
         ByteBuffer bb = c.extractionBuffer();
 

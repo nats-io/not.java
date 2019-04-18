@@ -38,7 +38,10 @@ public class Subscribe {
         String subject;
         String server;
         
-        if (args.length == 1) {
+        if (args.length == 2) {
+            server = args[0];
+            subject = args[1];
+        } else if (args.length == 1) {
             server = Options.DEFAULT_URL;
             subject = args[0];
         } else {
@@ -51,13 +54,13 @@ public class Subscribe {
             Tracer tracer = Not.initTracing("NATS OpenTracing Subscriber");
 
             // Connect to the NATS server and subscribe.
-            System.out.printf("\nTrying to connect to %s, and listen to %s.\n\n", server, subject);
             Connection nc = Nats.connect(server);
             Subscription sub = nc.subscribe(subject);
             nc.flush(Duration.ofSeconds(5));
 
             // Receive the message from the publisher, and create a 
             // trace message from the raw NATS message.
+            System.out.printf("\nConnected to %s, subscribed to %s.\n\n", server, subject);
             Message msg = sub.nextMessage(Duration.ofHours(1));
             TraceMessage tm = Not.decode(tracer, msg);
 

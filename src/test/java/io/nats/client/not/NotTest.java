@@ -44,10 +44,9 @@ public class NotTest {
         // as a nats message on the other side.
         byte[] wireData = Not.encode(sendTracer, sendContext, origData.getBytes());
 
-        // This represents a received message with the encoded payload.
+        // Receive side...
         Message m = NatsMessageCheater.createMessage("foo", "bar", wireData);
 
-        // Receive side...
         Tracer recvTracer = Not.initTracing("receive");
         TraceMessage tm = Not.decode(recvTracer, m);
         assertTrue(new String(tm.getData()).equals(origData));
