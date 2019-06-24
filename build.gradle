@@ -38,11 +38,9 @@ dependencies {
     compile 'io.opentracing:opentracing-api:0.32.0'
     compile 'io.opentracing:opentracing-util:0.32.0'
 
-
-    // Temporary until PR to Jaeger is accepted 
-    compile files('/Users/colinsullivan/go/src/github.com/ColinSullivan1/jaeger-client-java/jaeger-core/build/libs/jaeger-core-0.34.1-SNAPSHOT.jar')
-    compile files('/Users/colinsullivan/go/src/github.com/ColinSullivan1/jaeger-client-java/jaeger-thrift/build/libs/jaeger-thrift-0.34.1-SNAPSHOT.jar')
-    compile files('/Users/colinsullivan/go/src/github.com/ColinSullivan1/jaeger-client-java/jaeger-client/build/libs/jaeger-client-0.34.1-SNAPSHOT.jar')
+    compile 'io.jaegertracing:jaeger-core:0.35.5'
+    compile 'io.jaegertracing:jaeger-thrift:0.35.5'
+    compile 'io.jaegertracing:jaeger-client:0.35.5'
 
     compile group: 'org.apache.thrift', name: 'libthrift', version: '0.11.0'
     compile 'org.slf4j:slf4j-simple:1.7.26'

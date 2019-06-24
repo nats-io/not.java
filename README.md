@@ -175,7 +175,7 @@ Received reply "Here's some help" on subject "_INBOX.60KGSMo5oQOK1OOYNc0W6J.60KG
 
 ### Viewing the Request/Reply output in the Jaeger UI
 
-Navigate with a browser to http://localhost:16686.  Find the _NATS Requestor_
+Navigate with a browser to <http://localhost:16686>.  Find the _NATS Requestor_
 service in the services list and click the _Find Traces_ button.  Click on
 the _NATS OpenTracing Requestor_ service and you will see a screen similar to the following:
 
@@ -207,7 +207,7 @@ And finally in the third terminal go to the publish example directory:
 ./scripts/run_example.sh Publish demo.nats.io foo hello
 ```
 
-Navigate with a browser to http://localhost:16686.  Find the _NATS Publisher_
+Navigate with a browser to <http://localhost:16686>.  Find the _NATS Publisher_
 service in the services list and click the _Find Traces_ button.  Click on the
 _NATS OpenTracing Publisher_ service and you will see a screen to the following:
 
@@ -243,4 +243,5 @@ Sending hello on foo, server is nats://localhost:4222
 ## Our sponsor for this project
 
 Many thanks to [MasterCard](http://mastercard.com) for sponsoring this project.
+
 We appreciate MasterCard's support of NATS, CNCF, and the OSS community.
