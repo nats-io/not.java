@@ -142,17 +142,16 @@ run a NATS [server](http://github.com/nats-io/gnatsd) locally, use `localhost`.
 * [Request Example](./src/main/java/io/nats/client/not/examples/Request.java)
 * [Reply Example](./src/main/java/io/nats/client/not/examples/Reply.java)
 
-Open two terminals, in one terminal use the example helper script
-and run:
+Open two terminals and use the example helper scripts to setup a replier and requestor.
 
 ```bash
-./scripts/run_example.sh Reply demo.nats.io foo
+./scripts/reply.sh
 ```
 
 In the other terminal, run:
 
 ```bash
-./scripts/run_example.sh Request demo.nats.io foo help
+./scripts/request.sh
 ```
 
 ### Request Output
@@ -188,23 +187,23 @@ You can see the entire span of the request and the associated replier span.
 * [Publisher Example](./src/main/java/io/nats/client/not/examples/Publish.java)
 * [Subscriber Example](./src/main/java/io/nats/client/not/examples/Subscribe.java)
 
-Open three terminals, in the first two terminals go to the subscribe example
-directory and run:
+Open three terminals, in the first two terminals run the subscribe helper
+script:
 
 ```bash
-./scripts/run_example.sh Subscribe demo.nats.io foo
+./scripts/subscribe.sh
 ```
 
-and in the second terminal:
+in the second terminal:
 
 ```bash
-./scripts/run_example.sh Subscribe demo.nats.io foo
+./scripts/subscribe.sh
 ```
 
-And finally in the third terminal go to the publish example directory:
+And finally in the third terminal run the publish script:
 
 ```bash
-./scripts/run_example.sh Publish demo.nats.io foo hello
+./scripts/publish.sh
 ```
 
 Navigate with a browser to <http://localhost:16686>.  Find the _NATS Publisher_
