@@ -10,8 +10,19 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+- task: DownloadSecureProperties
+  name: notGradleProps
+  displayName: 'Download Secure Gradle Properties'
+  inputs:
+    secureFile: 'gradle.properties'
+- task: DownloadSecurePubring
+  name: notGradlePubring
+  displayName: 'Download Secure Gradle Publishing Key'
+  inputs:
+    secureFile: 'pubring.gpg'    
 - task: Gradle@2
   inputs:
+    options: "-c $(notGradleProps.secureFilePath)"
     workingDirectory: ''
     gradleWrapperFile: 'gradlew'
     gradleOptions: '-Xmx3072m'
