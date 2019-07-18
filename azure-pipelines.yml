@@ -10,12 +10,12 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- task: DownloadSecureProperties@1
+- task: DownloadSecureFile@1
   name: notGradleProps
   displayName: 'Download Secure Gradle Properties'
   inputs:
     secureFile: 'gradle.properties'
-- task: DownloadSecurePubring@1
+- task: DownloadSecureFile@1
   name: notGradlePubring
   displayName: 'Download Secure Gradle Publishing Key'
   inputs:
