@@ -89,4 +89,9 @@ public class TraceMessage implements io.nats.client.Message {
     public Subscription getSubscription() {
         return message.getSubscription();
     }
+
+	@Override
+	public String getSID() {
+		return message.getSID();
+	}
 }

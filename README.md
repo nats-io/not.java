@@ -1,3 +1,5 @@
+[![Build Status](https://dev.azure.com/colin0754/NATS/_apis/build/status/nats-io.not.java?branchName=master)](https://dev.azure.com/colin0754/NATS/_build/latest?definitionId=1&branchName=master)
+
 # OpenTracing with NATS
 
 Over the years, we've had periodic requests to support distributed tracing in
@@ -237,6 +239,48 @@ Received message "hello" on subject "foo"
 Sending hello on foo, server is nats://localhost:4222
 
 [main] INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: 2d16a66cb0ea9a3:2d16a66cb0ea9a3:0:1 - Publish
+```
+
+## Maven Coordinates
+
+Most users will want to modify this code for their own application or environment, and we encourage users to do so and
+include in their own application or infrastructure code.  If it is sufficient as-is, you can reference built jars via
+maven.
+
+The NATS client is available on the Maven central repository, and can be imported as a normal dependency in your pom.xml file:
+
+```xml
+<dependency>
+    <groupId>io.nats</groupId>
+    <artifactId>not</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
+If you need the absolute latest, before it propagates to maven central, you can use the repository:
+
+```xml
+<repositories>
+    <repository>
+        <id>latest-repo</id>
+        <url>https://oss.sonatype.org/content/repositories/releases</url>
+        <releases><enabled>true</enabled></releases>
+        <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+</repositories>
+```
+
+Development snapshots can be found on the sonatype snapshots repository.
+
+https://oss.sonatype.org/content/repositories/snapshots/
+
+```xml
+<dependency>
+  <groupId>io.nats</groupId>
+  <artifactId>not</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <type>pom</type>
+</dependency>
 ```
 
 ## Our sponsor for this project
