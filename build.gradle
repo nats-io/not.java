@@ -9,7 +9,35 @@
 plugins {
     // Apply the java-library plugin to add support for Java Library
     id 'java-library'
+    id 'signing'
+    id "io.codearte.nexus-staging" version "0.11.0"
+    id "maven"
 }
+
+// Update version here, repeated check-ins not into master will have snapshot on them
+// Be sure to update Nats.java with the latest version, the change log and the package-info.java
+def versionMajor = 0
+def versionMinor = 1
+def versionPatch = 0
+def versionModifier = ""
+def jarVersion = "0.1.0"
+def branch = System.getenv("Build.SourceBranchName");
+
+def getVersionName = { ->
+    if ("PullRequest".equals(System.getenv("Build.Reason")) || !"master".equals(branch))  {
+        versionModifier = "-SNAPSHOT"
+    }
+
+    if (versionModifier != null && versionModifier.length() > 0) {
+        return "" + versionMajor + "." + versionMinor + "." + versionPatch + versionModifier
+    } else {
+        return "" + versionMajor + "." + versionMinor + "." + versionPatch
+    }
+}
+
+version = getVersionName()
+archivesBaseName = 'not'
+group = 'io.nats'
 
 repositories {
     // Use jcenter for resolving your dependencies.
@@ -53,4 +81,52 @@ task fatJar(type: Jar) {
     baseName = 'not-fat'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
+}
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            if (project.hasProperty("local_archives")) {
+                repository(url: "file://$buildDir/repos")
+            } else if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: project.getProperty('ossrhUsername'), password: project.getProperty('ossrhPassword'))
+                }
+
+                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: project.getProperty('ossrhUsername'), password: project.getProperty('ossrhPassword'))
+                }
+            }
+
+            pom.project {
+                name 'not'
+                packaging 'jar'
+                description 'Simple client for distributed tracing over the NATS messaging system.'
+                url 'https://github.com/nats-io/not.java'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id="nats"
+                        name "The NATS Team"
+                        email "info@nats.io"
+                        url "https://nats.io"
+                    }
+                }
+                scm {
+                    url = 'https://github.com/nats-io/not.java'
+                }
+            }
+        }
+    }
 }
