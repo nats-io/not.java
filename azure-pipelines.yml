@@ -11,15 +11,23 @@ pool:
 
 steps:
 - task: DownloadSecureFile@1
-  name: notGradleProps
-  displayName: 'Download Secure Gradle Properties'
+  name: gradlePubring
+  displayName: 'Download Secure Gradle Publishing Keyring'
   inputs:
-    secureFile: 'gradle.properties'
+    secureFile: 'pubring.gpg'
+
 - task: DownloadSecureFile@1
-  name: notGradlePubring
-  displayName: 'Download Secure Gradle Publishing Key'
+  name: gradleProperties
+  displayName: 'Download Gradle Properties'
   inputs:
-    secureFile: 'pubring.gpg'    
+    secureFile: 'gradle.Properties'
+    
+- script: |
+    echo Installing $(gradlePubring.secureFilePath) to the current directory...
+    ln -s $(gradlePubring.secureFilePath) pubring.gpg
+    echo Installing $(gradleProperties.secureFilePath) to the current directory...
+    ln -s $(gradleProperties.secureFilePath) gradle.properties
+
 - task: Gradle@2
   inputs:
     options: "-c $(notGradleProps.secureFilePath)"
