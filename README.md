@@ -100,7 +100,7 @@ trace information and should be handled normally.
     // ...
 ```
 
-Check out the [examples](./examples) for additional usage.
+Check out the [examples](./src/main/java/io/nats/client/not/examples) for additional usage.
 
 ## Setting up the Jaeger Tracer
 
